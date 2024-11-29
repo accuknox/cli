@@ -1,5 +1,5 @@
 export CLIOUT=knoxcli
-export INC=akutil.sh
+export INC_SH=akutil.sh
 export VERSION=v0.2
 CLIURL=https://raw.githubusercontent.com/nyrahul/clibash/refs/heads/main/.gen.sh
 
