@@ -14,8 +14,8 @@ cluster_alerts_help()
 Options supported:
 * --clusterjq [jq-spec]: jq filter to be used on cluster list output (default: '$clusterjq')
 * --alertjq [jq-spec]: jq filter to be used on cluster list output (default: '$alertjq')
-* --stime [datetime]: start time in epoch format (default: '$stime', $stimestr)
-* --etime [datetime]: end time in epoch format (default: '$etime', now)
+* --stime [datetime]: start time in epoch format (default: $stimestr)
+* --etime [datetime]: end time in epoch format (default: now)
 * --type [alert-type]: alert-type (default: "$alerttype")
 * --filters [filter-spec]: Alert filters to be passed to API (default: '$filters')
 
