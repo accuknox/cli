@@ -3,6 +3,20 @@
 # This is an auto-generated file. Tread with caution!
 
 read -r -d '' filecontent <<EOR
+clilogo()
+{
+	cat <<EOH
+██╗  ██╗███╗   ██╗ ██████╗ ██╗  ██╗ ██████╗██╗     ██╗
+██║ ██╔╝████╗  ██║██╔═══██╗╚██╗██╔╝██╔════╝██║     ██║
+█████╔╝ ██╔██╗ ██║██║   ██║ ╚███╔╝ ██║     ██║     ██║
+██╔═██╗ ██║╚██╗██║██║   ██║ ██╔██╗ ██║     ██║     ██║
+██║  ██╗██║ ╚████║╚██████╔╝██╔╝ ██╗╚██████╗███████╗██║
+╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝
+EOH
+}
+EOR
+. <(echo "$filecontent")
+read -r -d '' filecontent <<EOR
 #!/bin/bash
 
 . \${ACCUKNOX_CFG:-~/.accuknox.cfg}
@@ -465,6 +479,7 @@ case "$cmd" in
 		echo "version: v0.2"
 		;;
 	* | help)
+		[[ "$(type -t clilogo)" == "function" ]] && clilogo
 		echo "# $0 command options"
 		echo "\`\`\`"
 		echo "$0"
