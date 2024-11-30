@@ -107,7 +107,7 @@ EOR
 read -r -d '' filecontent <<EOR
 #!/bin/bash
 
-. \${ACCUKNOX_CFG:-~/.accuknox.cfg}
+AKCFG=\${ACCUKNOX_CFG:-~/.accuknox.cfg}
 
 DIR=/tmp/\$\$
 TMP=\$DIR/\$(basename \$0)
@@ -145,6 +145,7 @@ EOH
 
 ak_api()
 {
+	. \$AKCFG
 	apiverbosity=\${API_VERBOSE:-0}
 	[[ \$apiverbosity -gt 0 ]] && echo "API: [\$1]"
 	unset apicmd
@@ -207,9 +208,8 @@ EOR
 read -r -d '' filecontent <<EOR
 clusterjq='.[] | select(.ClusterName|test("idt")'
 alertjq='.'
-stimestr="2 days ago"
-stime=\$(date -d "\$stimestr" +%s)
-etime=\$(date +%s)
+etime=\$(date +%s)				# current time
+stime=\$((\$etime-2*24*60*60))	# etime - 2 days
 alerttype="kubearmor"
 filters=""
 

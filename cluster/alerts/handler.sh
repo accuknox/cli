@@ -1,8 +1,7 @@
 clusterjq='.[] | select(.ClusterName|test("idt")'
 alertjq='.'
-stimestr="2 days ago"
-stime=$(date -d "$stimestr" +%s)
-etime=$(date +%s)
+etime=$(date +%s)				# current time
+stime=$(($etime-2*24*60*60))	# etime - 2 days
 alerttype="kubearmor"
 filters=""
 

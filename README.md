@@ -29,7 +29,7 @@ Supported options:
 	--clusterjq [value] => jq filter to be used on cluster list output (default: '.[]'). 
 	--alertjq [value] => jq filter to be used on cluster list output (default: '.'). 
 	-f | --filters [value] => Alert filters to be passed to API (default: ''). 
-	-s | --stime [value] => start time in epoch format (default: 2 days ago). 
+	-s | --stime [value] => start time in epoch format (default: ). 
 	-e | --etime [value] => end time in epoch format (default: now). 
 	-h | --help => help with the options. 
 Examples:

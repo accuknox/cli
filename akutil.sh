@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ${ACCUKNOX_CFG:-~/.accuknox.cfg}
+AKCFG=${ACCUKNOX_CFG:-~/.accuknox.cfg}
 
 DIR=/tmp/$$
 TMP=$DIR/$(basename $0)
@@ -38,6 +38,7 @@ EOH
 
 ak_api()
 {
+	. $AKCFG
 	apiverbosity=${API_VERBOSE:-0}
 	[[ $apiverbosity -gt 0 ]] && echo "API: [$1]"
 	unset apicmd
