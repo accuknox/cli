@@ -43,7 +43,6 @@ Examples:
 > --filters are passed directly to the AccuKnox API. --alertjq operates on the output of the AccuKnox API response. It is recommended to use --filters as far as possible. However, you can use regex/jq based matching criteria with --alertjq.
 
 ### [cluster list] command
-* --spec | -s: [requires value] search filter for cluster names (regex based)
 * --nodes | -n: lists nodes from the clusters
 * --clusterjq: jq filter to be used on cluster list output (default: '.[]')
 * --nodejq: jq filter to be used on node list output (default: '.result[].NodeName')
