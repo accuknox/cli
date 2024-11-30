@@ -6,7 +6,7 @@
 ██║  ██╗██║ ╚████║╚██████╔╝██╔╝ ██╗╚██████╗███████╗██║
 ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝
 ```
-# ./knoxcli command options
+# knoxcli command options
 ```
 ./knoxcli
 	cluster
@@ -84,3 +84,8 @@ image list [options]
       --label  | -l: image assets with label
 image scan [options]
       --spec | -s: Images to be scanned (regex can be specified)
+## Using docker
+
+```bash
+docker run -v $HOME/.accuknox.cfg:/root/.accuknox.cfg accuknox/knoxcli:main
+```
