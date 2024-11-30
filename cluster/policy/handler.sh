@@ -3,25 +3,6 @@ policyjq='.'
 polout="policydump"
 operation="list"
 
-cluster_policy_help()
-{
-	cat <<EOH
-### [cluster policy] command
-* --operation [list | dump]: Dump the policies in --dumpdir folder or list the policies
-* --dumpdir | -d: Policy dump directory
-* --clusterjq: jq filter to be used on cluster list output (default: '$clusterjq')
-* --policyjq: jq filter to be used on policy list output (default: '$policyjq')
-
-Examples:
-
-1. knoxcli cluster policy --clusterjq '.[] | select(.ClusterName|test("gke"))' --policyjq '.list_of_policies[] | select(.name|test("crypto"))' <br>
-	... get all the policies have 'crypto' in their name for all the clusters having 'gke' in their name
-
-2. knoxcli cluster policy --clusterjq '.[] | select(.ClusterName|test("gke"))' --policyjq '.list_of_policies[] | select(.namespace_name // "notpresent"|test("agents"))' <br>
-	... get all the policies in namespace agents ... if no namespace is present then "notpresent" is substituted.
-EOH
-}
-
 cluster_policy_dump_policy_file()
 {
 	ak_api "$CWPP_URL/policymanagement/v2/policy/$1"
@@ -56,23 +37,61 @@ cluster_policy_get_policy_list()
 	done
 }
 
+cp_help()
+{
+	cat <<EOH
+### [cluster policy] options
+Enlist the cluster policies. These include all policies, including, KubeArmor, Network, Admission Controller policies.
+
+EOH
+	arghelp
+	cat <<EOH
+Examples:
+
+	1. knoxcli cluster policy --clusterjq '.[] | select(.ClusterName|test("gke"))' --policyjq '.list_of_policies[] | select(.name|test("crypto"))'
+		... get all the policies have 'crypto' in their name for all the clusters having 'gke' in their name
+	2. knoxcli cluster policy --clusterjq '.[] | select(.ClusterName|test("gke"))' --policyjq '.list_of_policies[] | select(.namespace_name // "notpresent"|test("agents"))'
+		... get all the policies in namespace agents ... if no namespace is present then "notpresent" is substituted.
+
+EOH
+}
+
+cp_generic_handler()
+{
+	case "$1" in
+		operation)    operation="$2";                shift 2;;
+		clusterjq)    clusterjq="$2";                shift 2;;
+		policyjq)     policyjq="$2";                 shift 2;;
+		dumpdir) polout="$2"; operation="dump"; shift 2;;
+		help )  cp_help; return 2;;
+		* ) echo "UNKNOWN OPT" ;;
+	esac
+}
+
+
 cluster_policy_cmd()
 {
-    # Remember to specify : in cases where argument is nessary both in short and long options
-    OPTS=`getopt -o d:h --long "operation: policyjq: dumpdir: clusterjq: help" -n 'parse-options' -- "$@"`
-    eval set -- "$OPTS"
-    while true; do
-        case "$1" in
-            --operation)    operation="$2";                shift 2;;
-            --clusterjq)    clusterjq="$2";                shift 2;;
-            --policyjq)     policyjq="$2";                 shift 2;;
-            -d | --dumpdir) polout="$2"; operation="dump"; shift 2;;
-            -h | --help )  cluster_policy_help; return;    shift 1;;
-            -- ) shift; break ;;
-            * ) break ;;
-        esac
-    done
-	[[ "$operation" != "list" ]] && [[ "$operation" != "dump" ]] && echo "invalid operation [$operation]!" && return
+	arginit
+	argopt  --lopt "operation" --needval --handler "cp_generic_handler" \
+			--desc "[list|dump] Dump the policies in folder or list the policies. default:$operation"
+
+	argopt  --lopt "clusterjq" --needval --handler "cp_generic_handler" \
+			--desc "jq filter to be used on cluster list output (default: '$clusterjq')"
+
+	argopt  --lopt "policyjq" --needval --handler "cp_generic_handler" \
+			--desc "jq filter to be used on policy list output (default: '$policyjq')"
+
+	argopt  --sopt "d" --lopt "dumpdir" --needval --handler "cp_generic_handler" \
+			--desc "Policy dump directory"
+
+	argopt 	--sopt "h" --lopt "help" --handler "cp_help" \
+			--desc "help with the options"
+
+	argrun "$@"
+	[[ $? -ne 0 ]] && return 1
+	[[ "$operation" != "list" ]] && [[ "$operation" != "dump" ]] && \
+		echo "invalid operation [$operation]!" && return 1
+
 	ak_api "$CWPP_URL/cluster-onboarding/api/v1/get-onboarded-clusters?wsid=$TENANT_ID"
 	filter_json=$(echo $json_string | jq -r "$clusterjq")
 	while read cline; do

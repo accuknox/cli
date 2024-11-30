@@ -2,24 +2,6 @@ clusterjq='.[] | "id=\(.ID),name=\(.ClusterName),status=\(.Status)"'
 nodejq='.result[].NodeName'
 show_nodes=0
 
-cluster_list_help()
-{
-	cat <<EOH
-### [cluster list] command
-* --nodes | -n: lists nodes from the clusters
-* --clusterjq: jq filter to be used on cluster list output (default: '$clusterjq')
-* --nodejq: jq filter to be used on node list output (default: '$nodejq')
-
-Examples:
-
-1. knoxcli cluster list --clusterjq '.[] | select(.ClusterName|test("idt."))' --nodes <br>
-	... list all the clusters with idt substring in its names and list all the nodes in those clusters
-2. knoxcli cluster list --clusterjq '.[] | select((.type == "vm") and (.Status == "Inactive")) | "id=\(.ID),name=\(.ClusterName),status=\(.Status)"' <br>
-	... list all the Inactive VM clusters and print their ID,name,status
-
-EOH
-}
-
 cluster_list_get_node_list()
 {
 	echo "List of nodes in cluster [$cname]:"
@@ -28,21 +10,55 @@ cluster_list_get_node_list()
 	echo $json_string | jq -r "$nodejq"
 }
 
+cl_generic_handler()
+{
+	echo "[$1] ==> [$2]"
+	case "$1" in
+		"nodejq" ) nodejq="$2" ;;
+		"clusterjq" ) clusterjq="$2" ;;
+		"nodes" ) show_nodes=1 ;;
+		*) echo "UNHANDLER argopt";;
+	esac
+}
+
+cl_help()
+{
+	cat <<EOH
+### [cluster list] options
+List the cluster and corresponding nodes or any other entities (namespaces, workloads) as part of the cluster.
+
+EOH
+	arghelp
+	cat <<EOH
+
+Examples:
+
+	1. knoxcli cluster list --clusterjq '.[] | select(.ClusterName|test("idt."))' --nodes
+		... list all the clusters with idt substring in its names and list all the nodes in those clusters
+	2. knoxcli cluster list --clusterjq '.[] | select((.type == "vm") and (.Status == "Inactive")) | "id=\(.ID),name=\(.ClusterName),status=\(.Status)"'
+		... list all the Inactive VM clusters and print their ID,name,status
+
+EOH
+}
+
 cluster_list_cmd()
 {
-    # Remember to specify : in cases where argument is nessary both in short and long options
-    OPTS=`getopt -o hn --long "nodes clusterjq: nodejq: help" -n 'parse-options' -- "$@"`
-    eval set -- "$OPTS"
-    while true; do
-        case "$1" in
-            -n | --nodes ) show_nodes=1;              shift 1;;
-            --nodejq )     nodejq="$2"; show_nodes=1; shift 2;;
-            --clusterjq)   clusterjq="$2";            shift 2;;
-            -h | --help )  cluster_list_help;          exit 2;;
-            -- ) shift; break ;;
-            * ) break ;;
-        esac
-    done
+	arginit
+	argopt 	--lopt "clusterjq" --needval --handler "cl_generic_handler" \
+			--desc "jq filter to be used on cluster list output (default: '$clusterjq')"
+
+	argopt 	--lopt "nodejq" --needval --handler "cl_generic_handler" \
+			--desc "jq filter to be used on node list output (default: '$nodejq')"
+
+	argopt	--sopt "n" --lopt "nodes" --handler "cl_generic_handler" \
+			--desc "lists nodes from the clusters"
+
+	argopt	--sopt "h" --lopt "help" --handler "cl_help" \
+			--desc "help for cluster list"
+
+	argrun "$@"
+	[[ $? -ne 0 ]] && return 1
+
 	echo "List of clusters:"
 	ak_api "$CWPP_URL/cluster-onboarding/api/v1/get-onboarded-clusters?wsid=$TENANT_ID"
 	echo $json_string | jq -r "$clusterjq"
