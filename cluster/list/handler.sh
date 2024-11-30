@@ -41,7 +41,7 @@ cluster_list_cmd()
             -n | --nodes ) show_nodes=1;              shift 1;;
             --nodejq )     nodejq="$2"; show_nodes=1; shift 2;;
             --clusterjq)   clusterjq="$2";            shift 2;;
-            -h | --help )  cluster_list_help; return; shift 1;;
+            -h | --help )  cluster_list_help;          exit 2;;
             -- ) shift; break ;;
             * ) break ;;
         esac
