@@ -1,5 +1,5 @@
 export CLIOUT=knoxcli
-export INC_SH=akutil.sh
+export INC_SH=logo.sh akutil.sh
 export VERSION=v0.2
 TAG=$(shell git rev-parse --abbrev-ref HEAD)
 CLIURL=http://localhost:8000/cligen.sh
