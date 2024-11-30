@@ -1,6 +1,7 @@
 #!/bin/bash
 
 AKCFG=${ACCUKNOX_CFG:-~/.accuknox.cfg}
+[[ -f "$AKCFG" ]] && source $AKCFG
 
 DIR=/tmp/$$
 TMP=$DIR/$(basename $0)
@@ -38,7 +39,6 @@ EOH
 
 ak_api()
 {
-	. $AKCFG
 	apiverbosity=${API_VERBOSE:-0}
 	[[ $apiverbosity -gt 0 ]] && echo "API: [$1]"
 	unset apicmd
@@ -66,7 +66,6 @@ ak_prereq()
 {
 	[[ "$DIR" != "" ]] && mkdir -p $DIR
 	command -v jq >/dev/null 2>&1 || { echo >&2 "require 'jq' to be installed. Aborting."; exit 1; }
-	ak_dbg "tenant-id: $TENANT_ID"
 }
 
 function ak_cleanup {

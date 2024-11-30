@@ -59,7 +59,6 @@ cluster_list_cmd()
 	argrun "$@"
 	[[ $? -ne 0 ]] && return 1
 
-	echo "List of clusters:"
 	ak_api "$CWPP_URL/cluster-onboarding/api/v1/get-onboarded-clusters?wsid=$TENANT_ID"
 	echo $json_string | jq -r "$clusterjq"
 	[[ $show_nodes -eq 0 ]] && return
