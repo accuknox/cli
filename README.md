@@ -15,6 +15,8 @@
 	cluster alerts
 	cluster list
 	cluster policy
+	finding
+	finding list
 	version
 	help
 ```
@@ -24,20 +26,26 @@ List the assets.
 
 Supported options:
 
-	-f | --filter [value] => filter to be used with image list. 
+	-c | --category [value] => filter to be used with asset list. 
 	--assetjq [value] => jq based filter to use with asset list. 
-	-h | --help => help for cluster list. 
+	-h | --help => help for asset list. 
+	-d | --date-range [value] => date filter for asset list. 
 
 Examples:
 
 	1. knoxcli asset list
 		... list all the assets
-	2. knoxcli asset list --filter "asset_category=Container" --assetjq ".results[] | select(.vulnerabilities.Critical >= 3)"
-		... list all the 
+	2. knoxcli asset list --category "Container" --assetjq ".results[] | select(.vulnerabilities.Critical >= 3)"
+		... list all the Container images with 3 or more Critical vulnerabilities
+
+Options:
+	-c, --category The category of the asset to list
+	-d, --date-range A range of dates to filter the asset list. Two dates separated by 'to' are required, they should be of format 'YYY-MM-DD' (e.g. --date-range 01-01-2000to28-03-2000)
 
 #### Asset Categories list
 1. Container
 2. Storage
+3. Compute
 check further [cluster] options ...
 ### [cluster alerts] options
 Show alerts in the context of clusters. These alerts could be from KubeArmor, Network policies, Admission controllers or anything else as reported in "Monitors & Alerts" option in AccuKnox Control Plane.
@@ -95,3 +103,29 @@ Examples:
 	2. knoxcli cluster policy --clusterjq '.[] | select(.ClusterName|test("gke"))' --policyjq '.list_of_policies[] | select(.namespace_name // "notpresent"|test("agents"))'
 		... get all the policies in namespace agents ... if no namespace is present then "notpresent" is substituted.
 
+Fetching Findings...
+### [asset list] options
+List the assets.
+
+Supported options:
+
+	-t | --type [value] => filter to be used with finding list. 
+	--findingjq [value] => jq based filter to use with finding list. 
+	-h | --help => help for finding list. 
+	-d | --date-range [value] => date filter for finding list. 
+	-s | --severity [value] => filter finding list based on finding severity. 
+
+Examples:
+
+	1. knoxcli finding list
+		... list all the findings
+	2. knoxcli finding list --type "trivy" --assetjq ".results[] | select(.vulnerabilities.Critical >= 3)"
+		... list all the Container images with 3 or more Critical vulnerabilities
+
+Options:
+	-t, --type The type of the finding data to list based on scanner
+#### Finding type list
+1. trivy
+2. nessus
+	-d, --date-range A range of dates to filter the asset list. Two dates separated by 'to' are required, they should be of format 'YYY-MM-DD' (e.g. --date-range 01-01-2000to28-03-2000)
+	-s, --severity Filter the finding list based on severity. Multiple severities can be specified separated by commas

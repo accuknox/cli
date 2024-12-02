@@ -200,8 +200,9 @@ EOR
 # ----------- end of [asset] command handler ----------------
 # ----------- [asset_list] command handler -----------------------
 read -r -d '' filecontent <<EOR
-filter=""
-assetjq=".results[] | select(.vulnerabilities.Critical >= 2)"
+category=""
+assetjq="."
+date_range=""
 
 al_help()
 {
@@ -217,19 +218,25 @@ Examples:
 
 	1. knoxcli asset list
 		... list all the assets
-	2. knoxcli asset list --filter "asset_category=Container" --assetjq ".results[] | select(.vulnerabilities.Critical >= 3)"
-		... list all the 
+	2. knoxcli asset list --category "Container" --assetjq ".results[] | select(.vulnerabilities.Critical >= 3)"
+		... list all the Container images with 3 or more Critical vulnerabilities
+
+Options:
+	-c, --category The category of the asset to list
+	-d, --date-range A range of dates to filter the asset list. Two dates separated by 'to' are required, they should be of format 'YYY-MM-DD' (e.g. --date-range 01-01-2000to28-03-2000)
 
 #### Asset Categories list
 1. Container
 2. Storage
+3. Compute
 EOH
 }
 
 al_generic_handler()
 {
 	case "\$1" in
-		"filter" ) filter="\$2" ;;
+		"category" ) category="&asset_category=\$2" ;;
+		"date-range" ) date_range="&present_on_date_after="\$(echo "\$2" | sed 's/to.*//')"&present_on_date_before="\$(echo "\$2" | sed 's/.*to//')"" ;;
 		"assetjq" ) assetjq="\$2" ;;
 		*) echo "UNHANDLER argopt";;
 	esac
@@ -239,20 +246,23 @@ al_generic_handler()
 asset_list_cmd()
 {
 	arginit
-	argopt 	--lopt "filter" --sopt "f" --needval --handler "al_generic_handler" \
-			--desc "filter to be used with image list"
+	argopt 	--lopt "category" --sopt "c" --needval --handler "al_generic_handler" \
+			--desc "filter to be used with asset list"
 
 	argopt 	--lopt "assetjq" --needval --handler "al_generic_handler" \
 			--desc "jq based filter to use with asset list"
 
 	argopt	--sopt "h" --lopt "help" --handler "al_help" \
-			--desc "help for cluster list"
+			--desc "help for asset list"
+
+	argopt  --sopt "d" --lopt "date-range" --needval --handler "al_generic_handler" \
+		                        --desc "date filter for asset list"
 
 	argrun "\$@"
 	[[ \$? -ne 0 ]] && return 1
 
-	ak_api "\$CSPM_URL/api/v1/assets?page=1&page_size=20&\$filter"
-	#ak_api "\$CSPM_URL/api/v1/assets?page=1&page_size=20&search=&ordering=&asset_category=Container"
+	ak_api "\$CSPM_URL/api/v1/assets?page=1&page_size=20\$category\$date_range"
+	#ak_api "\$CSPM_URL/api/v1/assets?page=1&page_size=20&search=&ordering=&asset_category=Container&present_on_date_after=2024-11-20&present_on_date_before=2024-12-02"
 	echo \$json_string | jq -r "\$assetjq"
 }
 EOR
@@ -566,6 +576,94 @@ cluster_policy_cmd()
 EOR
 . <(echo "$filecontent")
 # ----------- end of [cluster_policy] command handler ----------------
+# ----------- [finding] command handler -----------------------
+read -r -d '' filecontent <<EOR
+finding_help()
+{
+	echo ;
+}
+
+finding_cmd()
+{
+	echo "Fetching Findings..."
+}
+EOR
+. <(echo "$filecontent")
+# ----------- end of [finding] command handler ----------------
+# ----------- [finding_list] command handler -----------------------
+read -r -d '' filecontent <<EOR
+findingjq=".results[]"
+type=""
+severity=""
+date_range=""
+
+fi_help()
+{
+	cat <<EOH
+### [asset list] options
+List the assets.
+
+EOH
+	arghelp
+	cat <<EOH
+
+Examples:
+
+	1. knoxcli finding list
+		... list all the findings
+	2. knoxcli finding list --type "trivy" --assetjq ".results[] | select(.vulnerabilities.Critical >= 3)"
+		... list all the Container images with 3 or more Critical vulnerabilities
+
+Options:
+	-t, --type The type of the finding data to list based on scanner
+#### Finding type list
+1. trivy
+2. nessus
+	-d, --date-range A range of dates to filter the asset list. Two dates separated by 'to' are required, they should be of format 'YYY-MM-DD' (e.g. --date-range 01-01-2000to28-03-2000)
+	-s, --severity Filter the finding list based on severity. Multiple severities can be specified separated by commas
+EOH
+}
+
+fi_generic_handler()
+{
+	case "\$1" in
+		"type" ) type="&data_type=\$2" ;;
+		"date-range" ) date_range="&last_seen_after="\$(echo "\$2" | sed 's/to.*//')"&last_seen_before="\$(echo "\$2" | sed 's/.*to//')"" ;;
+		"findingjq" ) findingjq="\$2" ;;
+		"severity" ) severity="&risk_factor=\$2" ;;
+		*) echo "UNHANDLER argopt";;
+	esac
+}
+
+
+finding_list_cmd()
+{
+	arginit
+	argopt 	--lopt "type" --sopt "t" --needval --handler "fi_generic_handler" \
+			--desc "filter to be used with finding list"
+
+	argopt 	--lopt "findingjq" --needval --handler "fi_generic_handler" \
+			--desc "jq based filter to use with finding list"
+
+	argopt	--sopt "h" --lopt "help" --handler "fi_help" \
+			--desc "help for finding list"
+
+	argopt  --sopt "d" --lopt "date-range" --needval --handler "fi_generic_handler" \
+		                        --desc "date filter for finding list"
+
+	argopt  --lopt "severity" --sopt "s" --needval --handler "fi_generic_handler" \
+		                        --desc "filter finding list based on finding severity"
+
+	argrun "\$@"
+	[[ \$? -ne 0 ]] && return 1
+
+	ak_api "\$CSPM_URL/api/v1/findings?page=1&search=&page_size=20\$type\$date_range\$severity"
+	#ak_api "\$CSPM_URL/api/v1/assets?page=1&page_size=20&search=&ordering=&asset_category=Container&present_on_date_after=2024-11-20&present_on_date_before=2024-12-02"
+	echo \$json_string | jq -r "\$findingjq"
+}
+EOR
+. <(echo "$filecontent")
+# ----------- end of [finding_list] command handler ----------------
 
 # Processing starts here ...
 unset cmd
@@ -594,6 +692,12 @@ case "$cmd" in
 	"cluster_policy")
 		cluster_policy_cmd "$@"
 		;;
+	"finding")
+		finding_cmd "$@"
+		;;
+	"finding_list")
+		finding_list_cmd "$@"
+		;;
 	"version")
 		echo "version: v0.2"
 		;;
@@ -608,6 +712,8 @@ case "$cmd" in
 		echo -en "\tcluster alerts\n"
 		echo -en "\tcluster list\n"
 		echo -en "\tcluster policy\n"
+		echo -en "\tfinding\n"
+		echo -en "\tfinding list\n"
 		echo -en "\tversion\n"
 		echo -en "\thelp\n"
 		echo "\`\`\`"
@@ -618,5 +724,7 @@ case "$cmd" in
 		cluster_alerts_cmd --help
 		cluster_list_cmd --help
 		cluster_policy_cmd --help
+		finding_cmd --help
+		finding_list_cmd --help
 		;;
 esac
