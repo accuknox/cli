@@ -32,9 +32,12 @@ Examples:
 
 	1. knoxcli asset list
 		... list all the assets
-	2. knoxcli asset list --filter --assetjq ".results[] | select(.vulnerabilities.Critical >= 3)"
+	2. knoxcli asset list --filter "asset_category=Container" --assetjq ".results[] | select(.vulnerabilities.Critical >= 3)"
 		... list all the 
 
+#### Asset Categories list
+1. Container
+2. Storage
 check further [cluster] options ...
 ### [cluster alerts] options
 Show alerts in the context of clusters. These alerts could be from KubeArmor, Network policies, Admission controllers or anything else as reported in "Monitors & Alerts" option in AccuKnox Control Plane.
