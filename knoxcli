@@ -184,6 +184,77 @@ argrun()
 }
 EOR
 . <(echo "$filecontent")
+# ----------- [asset] command handler -----------------------
+read -r -d '' filecontent <<EOR
+asset_help()
+{
+	echo ;
+}
+
+asset_cmd()
+{
+	echo "Executing image..."
+}
+EOR
+. <(echo "$filecontent")
+# ----------- end of [asset] command handler ----------------
+# ----------- [asset_list] command handler -----------------------
+read -r -d '' filecontent <<EOR
+filter=""
+assetjq=".results[] | select(.vulnerabilities.Critical >= 2)"
+
+al_help()
+{
+	cat <<EOH
+### [asset list] options
+List the assets.
+
+EOH
+	arghelp
+	cat <<EOH
+
+Examples:
+
+	1. knoxcli asset list
+		... list all the assets
+	2. knoxcli asset list --filter --assetjq ".results[] | select(.vulnerabilities.Critical >= 3)"
+		... list all the 
+
+EOH
+}
+
+al_generic_handler()
+{
+	case "\$1" in
+		"filter" ) filter="\$2" ;;
+		"assetjq" ) assetjq="\$2" ;;
+		*) echo "UNHANDLER argopt";;
+	esac
+}
+
+
+asset_list_cmd()
+{
+	arginit
+	argopt 	--lopt "filter" --sopt "f" --needval --handler "al_generic_handler" \
+			--desc "filter to be used with image list"
+
+	argopt 	--lopt "assetjq" --needval --handler "al_generic_handler" \
+			--desc "jq based filter to use with asset list"
+
+	argopt	--sopt "h" --lopt "help" --handler "al_help" \
+			--desc "help for cluster list"
+
+	argrun "\$@"
+	[[ \$? -ne 0 ]] && return 1
+
+	ak_api "\$CSPM_URL/api/v1/assets?page=1&page_size=20&\$filter"
+	#ak_api "\$CSPM_URL/api/v1/assets?page=1&page_size=20&search=&ordering=&asset_category=Container"
+	echo \$json_string | jq -r "\$assetjq"
+}
+EOR
+. <(echo "$filecontent")
+# ----------- end of [asset_list] command handler ----------------
 # ----------- [cluster] command handler -----------------------
 read -r -d '' filecontent <<EOR
 cluster_help()
@@ -322,7 +393,6 @@ cluster_list_get_node_list()
 
 cl_generic_handler()
 {
-	echo "[\$1] ==> [\$2]"
 	case "\$1" in
 		"nodejq" ) nodejq="\$2" ;;
 		"clusterjq" ) clusterjq="\$2" ;;
@@ -493,120 +563,6 @@ cluster_policy_cmd()
 EOR
 . <(echo "$filecontent")
 # ----------- end of [cluster_policy] command handler ----------------
-# ----------- [image] command handler -----------------------
-read -r -d '' filecontent <<EOR
-image_help()
-{
-	cat << EOH
-## [image] command
-[image] commands operates on container images and corresponding findings.
-
-EOH
-}
-
-image_cmd()
-{
-    # Remember to specify : in cases where argument is nessary both in short and long options
-    OPTS=\`getopt -o hp:l: --long "period: label: help" -n 'parse-options' -- "\$@"\`
-    eval set -- "\$OPTS"
-    while true; do
-        case "\$1" in
-            -p | --period ) timeperiod="\$2"; shift 2;;
-            -l | --label ) label="\$2"; shift 2;;
-            -h | --help ) image_help; return; shift 1;;
-            -- ) shift; break ;;
-            * ) break ;;
-        esac
-    done
-    echo "timeperiod: \$timeperiod"
-    echo "label: \$label"
-	echo "Executing image..."
-}
-EOR
-. <(echo "$filecontent")
-# ----------- end of [image] command handler ----------------
-# ----------- [image_list] command handler -----------------------
-read -r -d '' filecontent <<EOR
-filter=""
-imagejq="."
-
-il_help()
-{
-	cat <<EOH
-### [image list] options
-List the images.
-
-EOH
-	arghelp
-	cat <<EOH
-
-Examples:
-
-	1. knoxcli image list
-		... list all the images
-
-EOH
-}
-
-il_generic_handler()
-{
-	case "\$1" in
-		"filter" ) filter="\$2" ;;
-		"imagejq" ) imagejq="\$2" ;;
-		*) echo "UNHANDLER argopt";;
-	esac
-}
-
-
-image_list_cmd()
-{
-	arginit
-	argopt 	--lopt "filter" --sopt "f" --needval --handler "il_generic_handler" \
-			--desc "filter to be used with image list"
-
-	argopt 	--lopt "imagejq" --needval --handler "il_generic_handler" \
-			--desc "jq based filter to use with image list"
-
-	argopt	--sopt "h" --lopt "help" --handler "il_help" \
-			--desc "help for cluster list"
-
-	argrun "\$@"
-	[[ \$? -ne 0 ]] && return 1
-
-    echo "filter: \$filter"
-    echo "imagejq: \$imagejq"
-	echo "Executing image list..."
-}
-EOR
-. <(echo "$filecontent")
-# ----------- end of [image_list] command handler ----------------
-# ----------- [image_scan] command handler -----------------------
-read -r -d '' filecontent <<EOR
-image_scan_help()
-{
-	echo "image scan [options]"
-	echo "      --spec | -s: Images to be scanned (regex can be specified)"
-}
-
-image_scan_cmd()
-{
-    # Remember to specify : in cases where argument is nessary both in short and long options
-    OPTS=\`getopt -o hs: --long "spec: help" -n 'parse-options' -- "\$@"\`
-    eval set -- "\$OPTS"
-    while true; do
-        case "\$1" in
-            -s | --spec ) spec="\$2"; shift 2;;
-            -h | --help ) image_scan_help; return; shift 1;;
-            -- ) shift; break ;;
-            * ) break ;;
-        esac
-    done
-    echo "spec: \$spec"
-	echo "Executing image scan..."
-}
-EOR
-. <(echo "$filecontent")
-# ----------- end of [image_scan] command handler ----------------
 
 # Processing starts here ...
 unset cmd
@@ -617,6 +573,12 @@ while true; do
 	shift
 done
 case "$cmd" in
+	"asset")
+		asset_cmd "$@"
+		;;
+	"asset_list")
+		asset_list_cmd "$@"
+		;;
 	"cluster")
 		cluster_cmd "$@"
 		;;
@@ -629,15 +591,6 @@ case "$cmd" in
 	"cluster_policy")
 		cluster_policy_cmd "$@"
 		;;
-	"image")
-		image_cmd "$@"
-		;;
-	"image_list")
-		image_list_cmd "$@"
-		;;
-	"image_scan")
-		image_scan_cmd "$@"
-		;;
 	"version")
 		echo "version: v0.2"
 		;;
@@ -646,23 +599,21 @@ case "$cmd" in
 		echo "# $(basename $0) command options"
 		echo "\`\`\`"
 		echo "$0"
+		echo -en "\tasset\n"
+		echo -en "\tasset list\n"
 		echo -en "\tcluster\n"
 		echo -en "\tcluster alerts\n"
 		echo -en "\tcluster list\n"
 		echo -en "\tcluster policy\n"
-		echo -en "\timage\n"
-		echo -en "\timage list\n"
-		echo -en "\timage scan\n"
 		echo -en "\tversion\n"
 		echo -en "\thelp\n"
 		echo "\`\`\`"
 
+		asset_cmd --help
+		asset_list_cmd --help
 		cluster_cmd --help
 		cluster_alerts_cmd --help
 		cluster_list_cmd --help
 		cluster_policy_cmd --help
-		image_cmd --help
-		image_list_cmd --help
-		image_scan_cmd --help
 		;;
 esac

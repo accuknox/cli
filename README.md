@@ -9,16 +9,32 @@
 # knoxcli command options
 ```
 ./knoxcli
+	asset
+	asset list
 	cluster
 	cluster alerts
 	cluster list
 	cluster policy
-	image
-	image list
-	image scan
 	version
 	help
 ```
+Executing image...
+### [asset list] options
+List the assets.
+
+Supported options:
+
+	-f | --filter [value] => filter to be used with image list. 
+	--assetjq [value] => jq based filter to use with asset list. 
+	-h | --help => help for cluster list. 
+
+Examples:
+
+	1. knoxcli asset list
+		... list all the assets
+	2. knoxcli asset list --filter --assetjq ".results[] | select(.vulnerabilities.Critical >= 3)"
+		... list all the 
+
 check further [cluster] options ...
 ### [cluster alerts] options
 Show alerts in the context of clusters. These alerts could be from KubeArmor, Network policies, Admission controllers or anything else as reported in "Monitors & Alerts" option in AccuKnox Control Plane.
@@ -76,27 +92,3 @@ Examples:
 	2. knoxcli cluster policy --clusterjq '.[] | select(.ClusterName|test("gke"))' --policyjq '.list_of_policies[] | select(.namespace_name // "notpresent"|test("agents"))'
 		... get all the policies in namespace agents ... if no namespace is present then "notpresent" is substituted.
 
-## [image] command
-[image] commands operates on container images and corresponding findings.
-
-### [image list] options
-List the images.
-
-Supported options:
-
-	-f | --filter [value] => filter to be used with image list. 
-	--imagejq [value] => jq based filter to use with image list. 
-	-h | --help => help for cluster list. 
-
-Examples:
-
-	1. knoxcli image list
-		... list all the images
-
-image scan [options]
-      --spec | -s: Images to be scanned (regex can be specified)
-## Using docker
-
-```bash
-docker run -v $HOME/.accuknox.cfg:/root/.accuknox.cfg accuknox/knoxcli:main
-```
