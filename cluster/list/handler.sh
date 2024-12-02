@@ -12,7 +12,6 @@ cluster_list_get_node_list()
 
 cl_generic_handler()
 {
-	echo "[$1] ==> [$2]"
 	case "$1" in
 		"nodejq" ) nodejq="$2" ;;
 		"clusterjq" ) clusterjq="$2" ;;

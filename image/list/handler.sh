@@ -44,8 +44,13 @@ image_list_cmd()
 	argrun "$@"
 	[[ $? -ne 0 ]] && return 1
 
-    echo "filter: $filter"
-    echo "imagejq: $imagejq"
-	echo "Executing image list..."
+	ak_api "$CWPP_URL/cluster-onboarding/api/v1/get-onboarded-clusters?wsid=$TENANT_ID"
+	echo $json_string | jq -r "$clusterjq"
+	[[ $show_nodes -eq 0 ]] && return
+	while read cline; do
+		cid=${cline/ */}
+		cname=${cline/* /}
+		cluster_list_get_node_list
+	done < <(echo $json_string | jq -r '.[] | "\(.ID) \(.ClusterName)"')
 }
 
