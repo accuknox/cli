@@ -21,6 +21,7 @@ Examples:
 #### Asset Categories list
 1. Container
 2. Storage
+
 EOH
 }
 
@@ -50,7 +51,6 @@ asset_list_cmd()
 	[[ $? -ne 0 ]] && return 1
 
 	ak_api "$CSPM_URL/api/v1/assets?page=1&page_size=20&$filter"
-	#ak_api "$CSPM_URL/api/v1/assets?page=1&page_size=20&search=&ordering=&asset_category=Container"
 	echo $json_string | jq -r "$assetjq"
 }
 

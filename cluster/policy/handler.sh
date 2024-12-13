@@ -33,7 +33,7 @@ cluster_policy_get_policy_list()
 				polpath=/dev/stdout
 			fi
 			cluster_policy_dump_policy_file ${arr[0]}
-		done < <(echo $final_json | jq -r '. | "\(.policy_id) \(.name) \(.namespace_name)"')
+		done < <(echo $final_json | jq -r '.list_of_policies[] | "\(.policy_id) \(.name) \(.namespace_name)"')
 	done
 }
 

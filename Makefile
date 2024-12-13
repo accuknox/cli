@@ -7,7 +7,7 @@ CLIURL=https://raw.githubusercontent.com/nyrahul/clibash/refs/heads/main/cligen.
 
 all:
 	@curl -s $(CLIURL) | bash
-	@./$(CLIOUT) help > README.md && cat utils/usedocker.md >> README.md
+	@./$(CLIOUT) help > README.md || true && cat utils/usedocker.md >> README.md
 
 build:
 	@docker buildx build -t accuknox/$(CLIOUT):$(TAG) .

@@ -223,6 +223,7 @@ Examples:
 #### Asset Categories list
 1. Container
 2. Storage
+
 EOH
 }
 
@@ -252,7 +253,6 @@ asset_list_cmd()
 	[[ \$? -ne 0 ]] && return 1
 
 	ak_api "\$CSPM_URL/api/v1/assets?page=1&page_size=20&\$filter"
-	#ak_api "\$CSPM_URL/api/v1/assets?page=1&page_size=20&search=&ordering=&asset_category=Container"
 	echo \$json_string | jq -r "\$assetjq"
 }
 EOR
@@ -491,7 +491,7 @@ cluster_policy_get_policy_list()
 				polpath=/dev/stdout
 			fi
 			cluster_policy_dump_policy_file \${arr[0]}
-		done < <(echo \$final_json | jq -r '. | "\(.policy_id) \(.name) \(.namespace_name)"')
+		done < <(echo \$final_json | jq -r '.list_of_policies[] | "\(.policy_id) \(.name) \(.namespace_name)"')
 	done
 }
 
