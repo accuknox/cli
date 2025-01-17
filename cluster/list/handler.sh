@@ -59,12 +59,13 @@ cluster_list_cmd()
 	[[ $? -ne 0 ]] && return 1
 
 	ak_api "$CWPP_URL/cluster-onboarding/api/v1/get-onboarded-clusters?wsid=$TENANT_ID"
-	echo $json_string | jq -r "$clusterjq"
+	final_json=$(echo $json_string | jq -r "$clusterjq")
+	echo $final_json | jq .
 	[[ $show_nodes -eq 0 ]] && return
 	while read cline; do
 		cid=${cline/ */}
 		cname=${cline/* /}
 		cluster_list_get_node_list
-	done < <(echo $json_string | jq -r '.[] | "\(.ID) \(.ClusterName)"')
+	done < <(echo $final_json | jq -r '. | "\(.ID) \(.ClusterName)"')
 }
 
